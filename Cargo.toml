@@ -41,6 +41,9 @@ thiserror = "2.0"
 serde = { version = "1", features = ["derive"] }
 las = { version = "0.9", features = ["laz"] }
 
+# Added for octree
+slab = "0.4"
+
 # Added for potree
 futures = "0.3"
 bevy_gizmos = { version = "0.17" }
@@ -58,7 +61,7 @@ wasm-bindgen-futures = { version = "=0.4.50", optional = true }
 wasm_thread = { version = "0.3.3", optional = true }
 
 [dev-dependencies]
-bevy = { version = "0.17", features = ["bevy_dev_tools", "webgl2"] }
+bevy = { version = "0.17", features = ["bevy_dev_tools"] }
 rand = "0.9"
 bevy_panorbit_camera = "0.29"
 
