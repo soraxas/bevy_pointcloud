@@ -79,6 +79,7 @@ bevy-inspector-egui = "0.35.0"
 
 [features]
 default = []
+multi_threaded = []
 webgl = [
     "bevy_core_pipeline/webgl",
     "bevy_pbr/webgl",
