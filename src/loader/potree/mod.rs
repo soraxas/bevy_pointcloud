@@ -43,7 +43,10 @@ pub enum PotreeLoaderError {
     Metadata(String),
 
     #[error("potree internal error: {0}")]
-    Potree(#[from] PotreeHierarchyError),
+    Potree(#[from] PotreeHierarchyError<PotreeAssetSourceError>),
+
+    #[error("potree asset source error: {0}")]
+    AssetSource(#[from] PotreeAssetSourceError),
 
     #[error("octree topology error: {0}")]
     Octree(#[from] OctreeError),
@@ -240,7 +243,7 @@ impl<S: ByteSource + Send + Sync + 'static> OctreeLoader for PotreeLoader<S> {
             };
 
             if let Some(classification_attribute) = classification_attribute {
-                if let Some(classification) = point.attribute(classification_attribute) {
+                if let Some(classification) = point.attribute(&classification_attribute.name) {
                     let class_val = classification[0];
 
                     if !self.settings.filter_classification.filter(class_val as u8) {
@@ -252,7 +255,7 @@ impl<S: ByteSource + Send + Sync + 'static> OctreeLoader for PotreeLoader<S> {
             }
 
             if let Some(position_attribute) = position_attribute
-                && let Some(pos) = point.attribute(position_attribute)
+                && let Some(pos) = point.attribute(&position_attribute.name)
             {
                 positions.push([pos[0], pos[1], pos[2]]);
             } else {
@@ -261,7 +264,7 @@ impl<S: ByteSource + Send + Sync + 'static> OctreeLoader for PotreeLoader<S> {
 
             if let Some(colors) = maybe_colors.as_mut() {
                 if let Some(color_attribute) = color_attribute
-                    && let Some(color) = point.attribute(color_attribute)
+                    && let Some(color) = point.attribute(&color_attribute.name)
                 {
                     colors.push([color[0], color[1], color[2], 1.0]);
                 } else {
@@ -272,7 +275,7 @@ impl<S: ByteSource + Send + Sync + 'static> OctreeLoader for PotreeLoader<S> {
 
             if let Some(normals) = maybe_normals.as_mut() {
                 if let Some(normal_attribute) = normal_attribute
-                    && let Some(normal) = point.attribute(normal_attribute)
+                    && let Some(normal) = point.attribute(&normal_attribute.name)
                 {
                     normals.push([normal[0], normal[1], normal[2]]);
                 } else if let (
@@ -281,9 +284,9 @@ impl<S: ByteSource + Send + Sync + 'static> OctreeLoader for PotreeLoader<S> {
                     Some(normal_z_attribute),
                 ) = (normal_x_attribute, normal_y_attribute, normal_z_attribute)
                     && let (Some(normal_x), Some(normal_y), Some(normal_z)) = (
-                        point.attribute(normal_x_attribute),
-                        point.attribute(normal_y_attribute),
-                        point.attribute(normal_z_attribute),
+                        point.attribute(&normal_x_attribute.name),
+                        point.attribute(&normal_y_attribute.name),
+                        point.attribute(&normal_z_attribute.name),
                     )
                 {
                     normals.push([normal_x[0], normal_y[0], normal_z[0]]);
@@ -351,7 +354,22 @@ fn build_hierarchy<S: ByteSource + Send + Sync + 'static>(
         }
 
         let node = std::mem::take(&mut raw_nodes[idx]);
-        let aabb = Aabb::from_min_max(node.bounding_box.min, node.bounding_box.max);
+        // potree-rs pins a different `glam` major version than bevy, so
+        // `node.bounding_box.{min,max}` are a distinct `Vec3` type despite
+        // the same name — convert field-by-field rather than bumping either
+        // crate's glam pin.
+        let aabb = Aabb::from_min_max(
+            bevy::math::Vec3::new(
+                node.bounding_box.min.x,
+                node.bounding_box.min.y,
+                node.bounding_box.min.z,
+            ),
+            bevy::math::Vec3::new(
+                node.bounding_box.max.x,
+                node.bounding_box.max.y,
+                node.bounding_box.max.z,
+            ),
+        );
         let node_id = if let Some(parent_id) = parent_id {
             builder.insert_child(
                 parent_id,

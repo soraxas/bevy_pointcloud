@@ -12,6 +12,19 @@ impl HttpSource {
             url: url.to_string(),
         })
     }
+
+    /// Plain GET, no Range header — relies on and requires a 200 response.
+    ///
+    /// Used only for multi-file octree node fetches: Chrome's HTTP cache is
+    /// unreliable for concurrent 206 Partial Content responses that share
+    /// one cache key (new nodes lost, existing entries evicted, under
+    /// concurrent cold loads). A distinct URL + plain 200 response per node
+    /// caches correctly regardless of concurrency. Kept as its own method
+    /// (rather than reusing `read_to_end`) so this "no Range header, ever"
+    /// contract stays explicit and auditable.
+    pub async fn read_whole_no_range(&self) -> Result<Vec<u8>, ByteSourceError> {
+        ehttp_get(&self.url, None).await
+    }
 }
 
 impl ByteSource for HttpSource {

@@ -96,7 +96,7 @@ ehttp = { version = "0.5", optional = true }
 
 las = { version = "0.10", features = ["laz"], optional = true }
 
-potree = { git = "https://github.com/rlamarche/potree-rs.git", branch = "main", default-features = false, optional = true }
+potree = { git = "https://github.com/soraxas/potree-rs.git", branch = "feat/multi-file-octree", default-features = false, optional = true }
 
 copc-streaming = {
     # path = "/home/romain/code/vendor/copc/copc-streaming",
