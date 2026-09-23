@@ -1,7 +1,4 @@
-use std::{
-    path::PathBuf,
-    sync::OnceLock,
-};
+use std::{path::PathBuf, sync::OnceLock};
 
 use bytes::Bytes;
 use potree::{asset::PotreeAsset, metadata::Metadata};

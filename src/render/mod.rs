@@ -93,7 +93,8 @@ impl Plugin for RenderPointCloudPlugin {
                 (
                     PointCloudExtractionSystems::ExtractPointClouds,
                     PointCloudExtractionSystems::ExtractVisiblePointCloudChunks,
-                ).chain()
+                )
+                    .chain(),
             )
             .init_resource::<RenderPointCloudInstances>()
             .init_resource::<RenderPointCloudChunkInstances>()
@@ -113,14 +114,16 @@ impl Plugin for RenderPointCloudPlugin {
                 (
                     extract_pointcloud_instances
                         .in_set(PointCloudExtractionSystems::ExtractPointClouds),
-                    extract_pointcloud_chunk_instances.in_set(PointCloudExtractionSystems::ExtractPointClouds), //.after(extract_meshes_for_cpu_building),
+                    extract_pointcloud_chunk_instances
+                        .in_set(PointCloudExtractionSystems::ExtractPointClouds), //.after(extract_meshes_for_cpu_building),
                     extract_lights_visible_point_cloud_chunks
                         .in_set(PointCloudExtractionSystems::ExtractPointClouds)
                         .before(extract_lights),
                     extract_visible_point_cloud_chunks
                         .in_set(PointCloudExtractionSystems::ExtractVisiblePointCloudChunks)
                         .after(extract_cameras),
-                    extract_cascade_visible_point_cloud_chunks.in_set(PointCloudExtractionSystems::ExtractVisiblePointCloudChunks)
+                    extract_cascade_visible_point_cloud_chunks
+                        .in_set(PointCloudExtractionSystems::ExtractVisiblePointCloudChunks)
                         .after(extract_lights),
                     free_removed_point_cloud_uniforms,
                 ),
