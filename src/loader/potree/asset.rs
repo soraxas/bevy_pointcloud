@@ -45,20 +45,21 @@ pub enum PotreeAssetSourceError {
 impl<S: ByteSource> PotreeAsset for PotreeAssetSource<S> {
     type Error = PotreeAssetSourceError;
 
-    async fn read_metadata(&self) -> Result<Metadata, Self::Error> {
+    async fn read_metadata(&self) -> Result<Bytes, Self::Error> {
         let buffer = self.metadata.read_to_end(0).await?;
-        let metadata: Metadata = serde_json::from_slice(&buffer)?;
 
-        let layout = if metadata.octree_layout.as_deref() == Some("multi-file") {
-            OctreeLayout::MultiFile
-        } else {
-            OctreeLayout::SingleFile
-        };
-        // `Hierarchy::load` always calls `read_metadata` exactly once before
-        // any `read_octree_node` call, so this is set before it's read.
-        let _ = self.layout.set(layout);
+        if let Ok(metadata) = serde_json::from_slice::<Metadata>(&buffer) {
+            let layout = if metadata.octree_layout.as_deref() == Some("multi-file") {
+                OctreeLayout::MultiFile
+            } else {
+                OctreeLayout::SingleFile
+            };
+            // `Hierarchy::load` always calls `read_metadata` exactly once before
+            // any `read_octree_node` call, so this is set before it's read.
+            let _ = self.layout.set(layout);
+        }
 
-        Ok(metadata)
+        Ok(buffer.into())
     }
 
     async fn read_hierarchy(&self, offset: u64, length: usize) -> Result<Bytes, Self::Error> {

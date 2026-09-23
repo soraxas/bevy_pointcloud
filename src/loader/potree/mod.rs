@@ -43,7 +43,7 @@ pub enum PotreeLoaderError {
     Metadata(String),
 
     #[error("potree internal error: {0}")]
-    Potree(#[from] PotreeHierarchyError<PotreeAssetSourceError>),
+    Potree(#[from] PotreeHierarchyError),
 
     #[error("potree asset source error: {0}")]
     AssetSource(#[from] PotreeAssetSourceError),
@@ -243,7 +243,7 @@ impl<S: ByteSource + Send + Sync + 'static> OctreeLoader for PotreeLoader<S> {
             };
 
             if let Some(classification_attribute) = classification_attribute {
-                if let Some(classification) = point.attribute(&classification_attribute.name) {
+                if let Some(classification) = point.attribute(classification_attribute) {
                     let class_val = classification[0];
 
                     if !self.settings.filter_classification.filter(class_val as u8) {
@@ -255,7 +255,7 @@ impl<S: ByteSource + Send + Sync + 'static> OctreeLoader for PotreeLoader<S> {
             }
 
             if let Some(position_attribute) = position_attribute
-                && let Some(pos) = point.attribute(&position_attribute.name)
+                && let Some(pos) = point.attribute(position_attribute)
             {
                 positions.push([pos[0], pos[1], pos[2]]);
             } else {
@@ -264,7 +264,7 @@ impl<S: ByteSource + Send + Sync + 'static> OctreeLoader for PotreeLoader<S> {
 
             if let Some(colors) = maybe_colors.as_mut() {
                 if let Some(color_attribute) = color_attribute
-                    && let Some(color) = point.attribute(&color_attribute.name)
+                    && let Some(color) = point.attribute(color_attribute)
                 {
                     colors.push([color[0], color[1], color[2], 1.0]);
                 } else {
@@ -275,7 +275,7 @@ impl<S: ByteSource + Send + Sync + 'static> OctreeLoader for PotreeLoader<S> {
 
             if let Some(normals) = maybe_normals.as_mut() {
                 if let Some(normal_attribute) = normal_attribute
-                    && let Some(normal) = point.attribute(&normal_attribute.name)
+                    && let Some(normal) = point.attribute(normal_attribute)
                 {
                     normals.push([normal[0], normal[1], normal[2]]);
                 } else if let (
@@ -284,9 +284,9 @@ impl<S: ByteSource + Send + Sync + 'static> OctreeLoader for PotreeLoader<S> {
                     Some(normal_z_attribute),
                 ) = (normal_x_attribute, normal_y_attribute, normal_z_attribute)
                     && let (Some(normal_x), Some(normal_y), Some(normal_z)) = (
-                        point.attribute(&normal_x_attribute.name),
-                        point.attribute(&normal_y_attribute.name),
-                        point.attribute(&normal_z_attribute.name),
+                        point.attribute(normal_x_attribute),
+                        point.attribute(normal_y_attribute),
+                        point.attribute(normal_z_attribute),
                     )
                 {
                     normals.push([normal_x[0], normal_y[0], normal_z[0]]);
